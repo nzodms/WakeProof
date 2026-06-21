@@ -43,16 +43,15 @@ export async function scheduleAlarmNotification(params: {
   weekday?: number; // 1=dimanche (expo) ; omis = quotidien
 }): Promise<string | null> {
   try {
+    // SDK 51 : trigger calendaire { hour, minute, weekday?, repeats }.
+    const trigger =
+      params.weekday != null
+        ? { weekday: params.weekday, hour: params.hour, minute: params.minute, repeats: true }
+        : { hour: params.hour, minute: params.minute, repeats: true };
     return await Notifications.scheduleNotificationAsync({
       identifier: params.id,
       content: { title: params.title, body: params.body, sound: 'default' },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        hour: params.hour,
-        minute: params.minute,
-        weekday: params.weekday,
-        repeats: true,
-      },
+      trigger,
     });
   } catch {
     return null;
