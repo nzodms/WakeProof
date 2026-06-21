@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "WakeProof",
+    "slug": "wakeproof",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "wakeproof",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.wakeproof.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio", "remote-notification"],
+        "NSCameraUsageDescription": "WakeProof utilise la caméra pour vérifier tes preuves de réveil (photo proof, QR code).",
+        "NSMotionUsageDescription": "WakeProof utilise le capteur de mouvement pour les missions Shake et le comptage de pas.",
+        "NSMicrophoneUsageDescription": "WakeProof utilise le micro pour enregistrer les Wake Blasts vocaux."
+      }
+    },
+    "android": {
+      "package": "com.wakeproof.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0A0F"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACTIVITY_RECOGNITION",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_FULL_SCREEN_INTENT",
+        "WAKE_LOCK"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "WakeProof utilise la caméra pour vérifier tes preuves de réveil."
+        }
+      ]
+    ],
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": ""
+    }
+  }
+}
