@@ -24,10 +24,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
-  const [override, setOverride] = useState<ColorScheme | 'system'>('system');
+  const [override, setOverride] = useState<ColorScheme | 'system'>('light');
 
   const scheme: ColorScheme =
-    override === 'system' ? (system === 'light' ? 'light' : 'dark') : override;
+    override === 'system' ? (system === 'dark' ? 'dark' : 'light') : override;
 
   const theme = useMemo<Theme>(
     () => ({

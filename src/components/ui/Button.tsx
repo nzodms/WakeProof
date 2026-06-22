@@ -1,6 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ActivityIndicator, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
@@ -19,6 +18,7 @@ interface ButtonProps {
   haptic?: boolean;
 }
 
+/** Bouton iOS : remplissage plat, coins arrondis doux, hauteur 50. */
 export function Button({
   label,
   onPress,
@@ -37,21 +37,24 @@ export function Button({
     onPress?.();
   };
 
+  const filled = variant === 'primary' || variant === 'danger';
+  const fillColor = variant === 'danger' ? t.colors.danger : t.colors.accent;
+
   const inner = loading ? (
-    <ActivityIndicator color={variant === 'primary' ? '#fff' : t.colors.accent} />
+    <ActivityIndicator color={filled ? '#fff' : t.colors.accent} />
   ) : (
-    <Text variant="bodyStrong" color={variant === 'primary' || variant === 'danger' ? 'primary' : 'primary'}>
+    <Text variant="bodyStrong" style={{ color: filled ? '#fff' : t.colors.accent }}>
       {label}
     </Text>
   );
 
   const base: ViewStyle = {
-    height: 54,
-    borderRadius: t.radius.pill,
+    height: 50,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: t.spacing.xl,
-    opacity: disabled ? 0.45 : 1,
+    opacity: disabled ? 0.4 : 1,
     width: fullWidth ? '100%' : undefined,
   };
 
@@ -59,41 +62,26 @@ export function Button({
     <Pressable
       onPress={handlePress}
       disabled={disabled || loading}
-      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.97 : 1 }] }, style]}
+      style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}
     >
-      {variant === 'primary' && (
-        <LinearGradient
-          colors={[t.colors.accent, t.isDark ? '#5648D9' : '#7C6BFF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[base, t.shadows.soft, { shadowColor: t.colors.accent }]}
-        >
-          {inner}
-        </LinearGradient>
-      )}
-      {variant === 'danger' && (
-        <LinearGradient
-          colors={[t.colors.danger, '#C81E4E']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[base, t.shadows.soft, { shadowColor: t.colors.danger }]}
-        >
-          {inner}
-        </LinearGradient>
+      {filled && (
+        <View style={[base, t.shadows.soft, { backgroundColor: fillColor, shadowColor: fillColor }]}>{inner}</View>
       )}
       {variant === 'glass' && (
         <BlurView
-          intensity={30}
+          intensity={24}
           tint={t.isDark ? 'dark' : 'light'}
-          style={[base, styles.glass, { borderColor: t.colors.glassBorder }]}
+          style={[base, styles.glass, { borderColor: t.colors.glassBorder, backgroundColor: t.colors.glass }]}
         >
           {inner}
         </BlurView>
       )}
       {variant === 'ghost' && (
-        <Text variant="bodyStrong" color="accent" style={{ textAlign: 'center', paddingVertical: 16 }}>
-          {label}
-        </Text>
+        <View style={[base, { height: 44 }]}>
+          <Text variant="bodyStrong" color="accent">
+            {label}
+          </Text>
+        </View>
       )}
     </Pressable>
   );

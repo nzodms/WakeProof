@@ -11,6 +11,7 @@ import { navigationRef } from '@/lib/navigationRef';
 import { useNotificationRouter } from '@/features/notifications/notificationRouter';
 import { loadAlarms } from '@/features/alarms/alarmManager';
 import { RuntimeBadge } from '@/components/dev/RuntimeBadge';
+import { WebPreviewShell } from '@/components/system/WebPreviewShell';
 
 /** Effets globaux qui dépendent de l'auth + de la navigation prête. */
 function AppEffects() {
@@ -36,12 +37,14 @@ function NavRoot() {
     },
   };
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
-      <StatusBar style={t.isDark ? 'light' : 'dark'} />
-      <AppEffects />
-      <RootNavigator />
-      <RuntimeBadge />
-    </NavigationContainer>
+    <WebPreviewShell>
+      <NavigationContainer ref={navigationRef} theme={navTheme}>
+        <StatusBar style={t.isDark ? 'light' : 'dark'} />
+        <AppEffects />
+        <RootNavigator />
+        <RuntimeBadge />
+      </NavigationContainer>
+    </WebPreviewShell>
   );
 }
 
