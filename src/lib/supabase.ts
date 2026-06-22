@@ -1,13 +1,43 @@
 import 'react-native-url-polyfill/auto';
-import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
+import { createClient, SupportedStorage } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
-// Adaptateur de stockage chiffré pour la session Supabase (tokens).
-const SecureStorageAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+// Stockage de session : chiffré (SecureStore) sur natif, localStorage sur web.
+// expo-secure-store est natif uniquement, on ne doit pas l'appeler côté web.
+const NativeStorageAdapter: SupportedStorage = {
+  getItem: (key) => SecureStore.getItemAsync(key),
+  setItem: (key, value) => SecureStore.setItemAsync(key, value),
+  removeItem: (key) => SecureStore.deleteItemAsync(key),
 };
+
+const WebStorageAdapter: SupportedStorage = {
+  getItem: (key) => {
+    try {
+      return Promise.resolve(globalThis.localStorage?.getItem(key) ?? null);
+    } catch {
+      return Promise.resolve(null);
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      globalThis.localStorage?.setItem(key, value);
+    } catch {
+      /* no-op */
+    }
+    return Promise.resolve();
+  },
+  removeItem: (key) => {
+    try {
+      globalThis.localStorage?.removeItem(key);
+    } catch {
+      /* no-op */
+    }
+    return Promise.resolve();
+  },
+};
+
+const storage = Platform.OS === 'web' ? WebStorageAdapter : NativeStorageAdapter;
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -24,10 +54,10 @@ export const supabase = createClient(
   supabaseAnonKey || 'public-anon-demo',
   {
     auth: {
-      storage: SecureStorageAdapter,
+      storage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: Platform.OS === 'web',
     },
   },
 );

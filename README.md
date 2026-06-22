@@ -28,6 +28,22 @@ Exécute `supabase/schema.sql` dans le SQL Editor de ton projet Supabase
 (tables, enums, RLS, triggers). Crée un bucket Storage `wake-proofs` pour les
 photos de preuve.
 
+## Déploiement web (Vercel)
+
+WakeProof est une app Expo : pour la voir dans un navigateur (et sur Vercel),
+on exporte la version **web** (react-native-web).
+
+- Build local : `npm run build:web` → sortie statique dans `dist/`.
+- Vercel : la config est dans `vercel.json` (build `expo export --platform web`,
+  output `dist/`, rewrites SPA). Vercel détecte tout automatiquement — il suffit
+  d'importer le repo. Aucune variable n'est requise (mode démo) ; ajoute
+  `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` dans les env vars
+  Vercel pour passer en mode live.
+
+> Note : certaines fonctions natives (alarmes locales, capteurs, caméra,
+> stockage chiffré) sont dégradées ou indisponibles sur le web — la cible web
+> sert surtout à **présenter l'UI**. L'app réelle tourne sur iOS/Android.
+
 ## Architecture
 
 Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — structure, MissionEngine,
