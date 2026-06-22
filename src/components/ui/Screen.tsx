@@ -46,10 +46,14 @@ export function Screen({
   return (
     <View style={[styles.root, { backgroundColor: t.colors.background }]}>
       <LinearGradient
-        colors={[t.colors.gradientStart, t.colors.gradientEnd]}
+        colors={[t.colors.bgGradA, t.colors.background, t.colors.bgGradB]}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
+      {/* Orbs premium très subtils pour la profondeur du fond */}
+      <View pointerEvents="none" style={[styles.orb, { top: -60, right: -70, backgroundColor: t.colors.halo }]} />
+      <View pointerEvents="none" style={[styles.orb, { bottom: 80, left: -90, backgroundColor: t.colors.accentSoft }]} />
       {withHalos && (
         <View
           pointerEvents="none"
@@ -86,4 +90,5 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flex: 1 },
   floating: { position: 'absolute', right: 18, bottom: 96 },
+  orb: { position: 'absolute', width: 240, height: 240, borderRadius: 120, opacity: 0.5 },
 });

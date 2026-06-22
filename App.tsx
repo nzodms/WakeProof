@@ -12,6 +12,7 @@ import { useNotificationRouter } from '@/features/notifications/notificationRout
 import { loadAlarms } from '@/features/alarms/alarmManager';
 import { RuntimeBadge } from '@/components/dev/RuntimeBadge';
 import { WebPreviewShell } from '@/components/system/WebPreviewShell';
+import { injectNeoStyles, applyNeoVars } from '@/lib/webNeo';
 
 /** Effets globaux qui dépendent de l'auth + de la navigation prête. */
 function AppEffects() {
@@ -25,6 +26,10 @@ function AppEffects() {
 
 function NavRoot() {
   const t = useTheme();
+  React.useEffect(() => {
+    injectNeoStyles();
+    applyNeoVars(t);
+  }, [t]);
   const navTheme = {
     ...(t.isDark ? DarkTheme : DefaultTheme),
     colors: {

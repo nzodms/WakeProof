@@ -1,69 +1,97 @@
 import React from 'react';
-import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { Platform, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme';
+import { neo, NeoVariant } from '@/lib/webNeo';
 
 interface GlassCardProps {
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  intensity?: number;
   radiusKey?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Accent doux (ombre colorée légère) pour la carte principale. */
+  variant?: NeoVariant;
   glow?: boolean;
   padded?: boolean;
+  onPress?: () => void;
 }
 
 /**
- * Carte glass subtile, DA iOS : fond translucide léger, bordure très fine,
- * ombre douce. Rayon 24-28, padding ~18. Pas de gros gradient.
+ * Surface néomorphique iOS 26. Profondeur réelle (double ombre) sur web,
+ * ombre douce + reflet supérieur sur natif. Coins arrondis cohérents.
  */
 export function GlassCard({
   children,
   style,
-  intensity = 22,
   radiusKey = 'lg',
+  variant = 'raised',
   glow = false,
   padded = true,
+  onPress,
 }: GlassCardProps) {
   const t = useTheme();
   const borderRadius = t.radius[radiusKey];
-  const shadow = glow
-    ? { ...t.shadows.soft, shadowColor: t.colors.accent, shadowOpacity: t.isDark ? 0.25 : 0.16 }
-    : t.shadows.soft;
+  const isInset = variant === 'inset';
 
-  return (
-    <View style={[{ borderRadius }, shadow, style]}>
-      <BlurView
-        intensity={intensity}
-        tint={t.isDark ? 'dark' : 'light'}
-        style={[styles.blur, { borderRadius, borderColor: t.colors.glassBorder }]}
-      >
-        <View
-          style={[StyleSheet.absoluteFill, { backgroundColor: t.colors.glass }]}
-          pointerEvents="none"
-        />
-        {/* Reflet supérieur très léger */}
+  // Ombre native (web géré par neo()).
+  const nativeShadow =
+    Platform.OS === 'web' || isInset
+      ? null
+      : {
+          shadowColor: glow ? t.colors.accent : '#000',
+          shadowOpacity: glow ? (t.isDark ? 0.3 : 0.18) : t.isDark ? 0.4 : 0.12,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 6,
+        };
+
+  const content = (
+    <>
+      {/* Reflet supérieur très doux */}
+      {!isInset && (
         <View
           pointerEvents="none"
           style={{
             position: 'absolute',
             top: 0,
-            left: 0,
-            right: 0,
+            left: 16,
+            right: 16,
             height: 1,
+            borderRadius: 1,
             backgroundColor: t.colors.glassHighlight,
-            opacity: Platform.OS === 'web' ? 0.6 : 0.4,
+            opacity: t.isDark ? 0.25 : 0.7,
           }}
         />
-        <View style={padded ? { padding: 18 } : undefined}>{children}</View>
-      </BlurView>
+      )}
+      <View style={padded ? { padding: 18 } : undefined}>{children}</View>
+    </>
+  );
+
+  const baseStyle: ViewStyle = {
+    borderRadius,
+    backgroundColor: isInset ? t.colors.surfaceSoft : t.colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: t.colors.glassBorder,
+    overflow: 'hidden',
+  };
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        {...neo(variant, true)}
+        style={({ pressed }) => [
+          baseStyle,
+          nativeShadow,
+          pressed && Platform.OS !== 'web' ? { transform: [{ scale: 0.985 }] } : null,
+          style,
+        ]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View {...neo(variant)} style={[baseStyle, nativeShadow, style]}>
+      {content}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  blur: {
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-});

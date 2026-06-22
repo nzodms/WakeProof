@@ -28,7 +28,7 @@ export function WakeCheckScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.background }}>
-      <LinearGradient colors={[t.colors.gradientStart, t.colors.background]} style={{ flex: 1 }}>
+      <LinearGradient colors={[t.colors.bgGradA, t.colors.background]} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'center', gap: t.spacing.xl }}>
           <View style={{ alignItems: 'center', gap: 12 }}>
             <Icon name="check" size={64} color={t.colors.accent} />

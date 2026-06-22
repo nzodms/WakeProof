@@ -1,16 +1,20 @@
-// WakeProof — Palette Apple/iOS. Clair premium par défaut, dark très propre.
-// Bleu système iOS comme accent. Pas de halos violets, pas de couleurs criardes.
+// WakeProof — Direction artistique iOS 26 / Liquid Glass néomorphique.
+// Fond premium bleu-gris, profondeur douce (double ombre), bleu Apple.
+// Couleurs limitées : encre, gris, bleu, vert succès, orange retard, rouge échec.
 
 export type ColorScheme = 'light' | 'dark';
 
 export interface Palette {
   // Fonds
   background: string;
-  backgroundElevated: string;
+  bgGradA: string;
+  bgGradB: string;
   surface: string;
-  // Verre
+  surfaceSoft: string;
+  // Profondeur néomorphique
+  shadowLight: string;
+  shadowDark: string;
   glass: string;
-  glassStrong: string;
   glassBorder: string;
   glassHighlight: string;
   // Texte
@@ -21,58 +25,57 @@ export interface Palette {
   accent: string;
   accentSoft: string;
   halo: string;
-  // Sémantique (couleurs système iOS)
+  // Sémantique
   success: string;
   warning: string;
   danger: string;
-  // Dégradés de fond (très subtils)
-  gradientStart: string;
-  gradientEnd: string;
-  // Cadre web (preview iPhone)
+  // Cadre web
   webBackdrop: string;
 }
 
 export const palettes: Record<ColorScheme, Palette> = {
   light: {
-    background: '#F2F2F7',
-    backgroundElevated: '#FFFFFF',
-    surface: '#FFFFFF',
-    glass: 'rgba(255,255,255,0.70)',
-    glassStrong: 'rgba(255,255,255,0.86)',
-    glassBorder: 'rgba(0,0,0,0.06)',
-    glassHighlight: 'rgba(255,255,255,0.9)',
-    text: '#1C1C1E',
-    textSecondary: 'rgba(60,60,67,0.6)',
-    textTertiary: 'rgba(60,60,67,0.3)',
-    accent: '#007AFF',
-    accentSoft: 'rgba(0,122,255,0.12)',
-    halo: 'rgba(0,122,255,0.10)',
+    background: '#E8ECF2',
+    bgGradA: '#EEF2F7',
+    bgGradB: '#DCE2EB',
+    surface: '#E9EDF3',
+    surfaceSoft: 'rgba(233,237,243,0.7)',
+    shadowLight: 'rgba(255,255,255,0.9)',
+    shadowDark: 'rgba(146,158,178,0.40)',
+    glass: 'rgba(255,255,255,0.55)',
+    glassBorder: 'rgba(255,255,255,0.7)',
+    glassHighlight: 'rgba(255,255,255,0.95)',
+    text: '#161A22',
+    textSecondary: 'rgba(60,67,80,0.66)',
+    textTertiary: 'rgba(60,67,80,0.38)',
+    accent: '#0A84FF',
+    accentSoft: 'rgba(10,132,255,0.12)',
+    halo: 'rgba(10,132,255,0.14)',
     success: '#34C759',
     warning: '#FF9500',
     danger: '#FF3B30',
-    gradientStart: '#F7F7FB',
-    gradientEnd: '#EFEFF4',
-    webBackdrop: '#1A1A1C',
+    webBackdrop: '#12151C',
   },
   dark: {
-    background: '#000000',
-    backgroundElevated: '#1C1C1E',
-    surface: '#1C1C1E',
-    glass: 'rgba(255,255,255,0.08)',
-    glassStrong: 'rgba(255,255,255,0.14)',
-    glassBorder: 'rgba(255,255,255,0.12)',
-    glassHighlight: 'rgba(255,255,255,0.18)',
-    text: '#FFFFFF',
-    textSecondary: 'rgba(235,235,245,0.6)',
-    textTertiary: 'rgba(235,235,245,0.3)',
+    background: '#0E1117',
+    bgGradA: '#161B24',
+    bgGradB: '#0A0D12',
+    surface: '#171C26',
+    surfaceSoft: 'rgba(23,28,38,0.7)',
+    shadowLight: 'rgba(255,255,255,0.05)',
+    shadowDark: 'rgba(0,0,0,0.55)',
+    glass: 'rgba(40,46,58,0.5)',
+    glassBorder: 'rgba(255,255,255,0.10)',
+    glassHighlight: 'rgba(255,255,255,0.14)',
+    text: '#F2F4F8',
+    textSecondary: 'rgba(225,229,238,0.62)',
+    textTertiary: 'rgba(225,229,238,0.34)',
     accent: '#0A84FF',
     accentSoft: 'rgba(10,132,255,0.20)',
-    halo: 'rgba(10,132,255,0.12)',
+    halo: 'rgba(10,132,255,0.18)',
     success: '#30D158',
     warning: '#FF9F0A',
     danger: '#FF453B',
-    gradientStart: '#1C1C1E',
-    gradientEnd: '#000000',
-    webBackdrop: '#0A0A0C',
+    webBackdrop: '#06080C',
   },
 };

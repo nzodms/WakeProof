@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
+import { neo } from '@/lib/webNeo';
 import { Text } from './Text';
 
 interface SegmentedControlProps<T extends string> {
@@ -12,39 +12,32 @@ interface SegmentedControlProps<T extends string> {
   onChange: (value: T) => void;
 }
 
-/** Switcher Liquid Glass avec curseur fluide qui glisse sous l'option active. */
-export function SegmentedControl<T extends string>({
-  options,
-  value,
-  onChange,
-}: SegmentedControlProps<T>) {
+/** Segmented control Apple : piste creusée (inset) + thumb relevé qui glisse. */
+export function SegmentedControl<T extends string>({ options, value, onChange }: SegmentedControlProps<T>) {
   const t = useTheme();
   const [width, setWidth] = useState(0);
   const count = options.length;
-  const segW = width / count;
+  const inner = width - 8;
+  const segW = inner / count;
   const index = Math.max(0, options.findIndex((o) => o.value === value));
 
-  const cursorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(index * segW, { damping: 18, stiffness: 180 }) }],
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: withSpring(index * segW, { damping: 20, stiffness: 220 }) }],
     width: segW,
   }));
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
   return (
-    <BlurView
-      intensity={24}
-      tint={t.isDark ? 'dark' : 'light'}
-      style={[styles.track, { borderColor: t.colors.glassBorder, backgroundColor: t.colors.glass }]}
+    <View
+      {...neo('inset')}
       onLayout={onLayout}
+      style={[styles.track, { backgroundColor: t.colors.surfaceSoft, borderColor: t.colors.glassBorder }]}
     >
       {width > 0 && (
         <Animated.View
-          style={[
-            styles.cursor,
-            cursorStyle,
-            { backgroundColor: t.colors.accentSoft, borderColor: t.colors.glassHighlight },
-          ]}
+          {...neo('raised-sm')}
+          style={[styles.thumb, thumbStyle, { backgroundColor: t.colors.surface }]}
         />
       )}
       {options.map((opt) => {
@@ -60,32 +53,25 @@ export function SegmentedControl<T extends string>({
               }
             }}
           >
-            <Text variant="caption" color={active ? 'accent' : 'secondary'}>
+            <Text variant="caption" color={active ? 'primary' : 'secondary'} style={{ fontWeight: active ? '700' : '500' }}>
               {opt.label}
             </Text>
           </Pressable>
         );
       })}
-    </BlurView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    height: 44,
+    height: 42,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     padding: 4,
   },
-  cursor: {
-    position: 'absolute',
-    top: 4,
-    bottom: 4,
-    left: 0,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
+  thumb: { position: 'absolute', top: 4, bottom: 4, left: 4, borderRadius: 999 },
   segment: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
