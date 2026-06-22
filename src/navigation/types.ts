@@ -10,12 +10,15 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Auth: undefined;
   Onboarding: undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
   CreateAlarm: { alarmId?: string } | undefined;
   MissionSetup: { missionType?: MissionType } | undefined;
   ActiveAlarm: { alarmId: string };
   MissionExecution: { alarmId: string };
+  WakeCheck: { alarmId: string };
+  WakeResult: { score: number };
   CrewDetail: { crewId: string };
   WakeBlast: { targetId: string; crewId: string };
   GlobalLeaderboard: undefined;

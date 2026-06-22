@@ -11,6 +11,8 @@ import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
 import { useAlarmStore } from '@/store/useAlarmStore';
 import { useEntitlementsStore } from '@/store/useEntitlementsStore';
+import { toggleAlarm as toggleAlarmManaged } from '@/features/alarms/alarmManager';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { MissionEngine } from '@/features/missions/MissionEngine';
 import { formatWeekdays, humanizeDuration, minutesUntil } from '@/lib/format';
 import { RootStackParamList } from '@/navigation/types';
@@ -22,7 +24,8 @@ const DIFFICULTY_LABEL = { easy: 'Facile', strict: 'Strict', hardcore: 'Hardcore
 export function HomeScreen() {
   const t = useTheme();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { alarms, toggleAlarm, triggerAlarm } = useAlarmStore();
+  const alarms = useAlarmStore((s) => s.alarms);
+  const triggerAlarm = useAlarmStore((s) => s.triggerAlarm);
   const canCreateAlarm = useEntitlementsStore((s) => s.canCreateAlarm);
 
   const nextAlarm = useMemo(() => {
@@ -98,19 +101,29 @@ export function HomeScreen() {
       <Text variant="h3" style={{ marginTop: t.spacing.xl, marginBottom: t.spacing.sm }}>
         Toutes les alarmes
       </Text>
-      <View style={{ gap: t.spacing.md }}>
-        {alarms.map((alarm) => (
-          <AlarmRow
-            key={alarm.id}
-            alarm={alarm}
-            onToggle={() => {
-              haptics.selection();
-              toggleAlarm(alarm.id);
-            }}
-            onPress={() => nav.navigate('CreateAlarm', { alarmId: alarm.id })}
-          />
-        ))}
-      </View>
+      {alarms.length === 0 ? (
+        <EmptyState
+          emoji="⏰"
+          title="Aucune alarme"
+          subtitle="Crée ton premier réveil à mission et lève-toi pour de vrai."
+          actionLabel="Créer un réveil"
+          onAction={handleCreate}
+        />
+      ) : (
+        <View style={{ gap: t.spacing.md }}>
+          {alarms.map((alarm) => (
+            <AlarmRow
+              key={alarm.id}
+              alarm={alarm}
+              onToggle={() => {
+                haptics.selection();
+                void toggleAlarmManaged(alarm);
+              }}
+              onPress={() => nav.navigate('CreateAlarm', { alarmId: alarm.id })}
+            />
+          ))}
+        </View>
+      )}
     </Screen>
   );
 }

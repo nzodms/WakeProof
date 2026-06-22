@@ -1,11 +1,26 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { ThemeProvider, useTheme } from '@/theme';
+import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { navigationRef } from '@/lib/navigationRef';
+import { useNotificationRouter } from '@/features/notifications/notificationRouter';
+import { loadAlarms } from '@/features/alarms/alarmManager';
+import { RuntimeBadge } from '@/components/dev/RuntimeBadge';
+
+/** Effets globaux qui dépendent de l'auth + de la navigation prête. */
+function AppEffects() {
+  const { status } = useAuth();
+  useNotificationRouter();
+  useEffect(() => {
+    if (status === 'ready') void loadAlarms();
+  }, [status]);
+  return null;
+}
 
 function NavRoot() {
   const t = useTheme();
@@ -21,9 +36,11 @@ function NavRoot() {
     },
   };
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
       <StatusBar style={t.isDark ? 'light' : 'dark'} />
+      <AppEffects />
       <RootNavigator />
+      <RuntimeBadge />
     </NavigationContainer>
   );
 }
@@ -33,7 +50,9 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <NavRoot />
+          <AuthProvider>
+            <NavRoot />
+          </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

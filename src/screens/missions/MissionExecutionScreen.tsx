@@ -16,24 +16,32 @@ import { haptics } from '@/lib/haptics';
 import { useAlarmStore } from '@/store/useAlarmStore';
 import { MissionEngine } from '@/features/missions/MissionEngine';
 import { generateCalcProblem, CalcProblem } from '@/features/missions/calcGenerator';
+import { completeWake } from '@/features/wake/completeWakeFlow';
 import { RootStackParamList } from '@/navigation/types';
 
 export function MissionExecutionScreen() {
   const t = useTheme();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'MissionExecution'>>();
-  const { getAlarm, dismissAlarm } = useAlarmStore();
+  const getAlarm = useAlarmStore((s) => s.getAlarm);
+  const dismissAlarm = useAlarmStore((s) => s.dismissAlarm);
   const alarm = getAlarm(route.params.alarmId);
+  const completingRef = useRef(false);
 
   if (!alarm) return null;
   const def = MissionEngine.get(alarm.missionType);
 
-  const onComplete = () => {
+  // Réussite de la mission → on coupe l'alarme côté app et on enregistre tout.
+  const onComplete = async () => {
+    if (completingRef.current) return;
+    completingRef.current = true;
     haptics.success();
+    const startedAt = useAlarmStore.getState().ringingStartedAt ?? Date.now();
+    const durationMs = Date.now() - startedAt;
+    const lateMinutes = Math.max(0, Math.floor(durationMs / 60000) - alarm.gracePeriodMin);
     dismissAlarm();
-    // Ici : enregistrer mission_attempts + wake_log, calculer le Wake Score,
-    // émettre un wake_event au Crew. (cf. features/wakeScore + crewRealtime)
-    nav.navigate('Tabs', { screen: 'Alarm' });
+    const breakdown = await completeWake({ alarm, snoozeCount: 0, lateMinutes, durationMs });
+    nav.replace('WakeResult', { score: breakdown.total });
   };
 
   return (

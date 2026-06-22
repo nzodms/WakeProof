@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { ONBOARDING_GOALS } from '@/constants/categories';
 import { requestNotificationPermission } from '@/lib/notifications';
 
@@ -17,14 +18,22 @@ const ORDER: Step[] = ['promise', 'goal', 'permissions', 'crew'];
 
 export function OnboardingScreen() {
   const t = useTheme();
+  const { completeOnboarding } = useAuth();
   const [step, setStep] = useState<Step>('promise');
-  const { goal, setGoal, setPermission, permissions, complete } = useOnboardingStore();
+  const [finishing, setFinishing] = useState(false);
+  const { goal, setGoal, setPermission, permissions } = useOnboardingStore();
 
   const idx = ORDER.indexOf(step);
-  const next = () => {
+  const next = async () => {
     haptics.impact('light');
-    if (idx < ORDER.length - 1) setStep(ORDER[idx + 1]!);
-    else complete();
+    if (idx < ORDER.length - 1) {
+      setStep(ORDER[idx + 1]!);
+      return;
+    }
+    setFinishing(true);
+    // Persiste l'objectif au profil (live) ou termine l'onboarding démo.
+    await completeOnboarding({ goal: goal ?? 'discipline' });
+    setFinishing(false);
   };
 
   return (
@@ -145,6 +154,7 @@ export function OnboardingScreen() {
         <Button
           label={step === 'crew' ? 'Commencer' : 'Continuer'}
           onPress={next}
+          loading={finishing}
           disabled={step === 'goal' && !goal}
         />
         {step !== 'promise' && step !== 'goal' && (

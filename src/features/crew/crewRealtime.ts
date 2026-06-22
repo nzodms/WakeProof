@@ -1,12 +1,7 @@
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { isLive } from '@/lib/runtimeMode';
 import { CrewMemberStatus, WakeStatus } from '@/types/domain';
-
-export interface CrewRealtimeHandlers {
-  onPresenceSync: (members: CrewMemberStatus[]) => void;
-  onWakeEvent: (event: { userId: string; type: string; payload: Record<string, unknown> }) => void;
-  onWakeBlast: (blast: { senderId: string; kind: string; tone: string }) => void;
-}
 
 export interface CrewPresenceState {
   userId: string;
@@ -17,25 +12,35 @@ export interface CrewPresenceState {
   snoozeCount?: number;
 }
 
-/**
- * Souscrit au canal Realtime d'un Crew :
- *  - Presence : statut du matin live de chaque membre,
- *  - Broadcast : feed d'événements + Wake Blasts entrants.
- * Renvoie une fonction de désinscription.
- */
+export interface CrewRealtimeHandlers {
+  onPresenceSync: (members: CrewMemberStatus[]) => void;
+  onWakeEvent?: (event: { userId: string; type: string; payload: Record<string, unknown> }) => void;
+}
+
+// Un seul canal par crew, partagé entre la souscription (page Crew) et la
+// publication de statut (flow d'alarme), pour que la présence reste cohérente.
+const channels = new Map<string, RealtimeChannel>();
+const lastPresence = new Map<string, CrewPresenceState>();
+
+function getChannel(crewId: string): RealtimeChannel {
+  let channel = channels.get(crewId);
+  if (!channel) {
+    channel = supabase.channel(`crew:${crewId}`, { config: { presence: { key: crewId } } });
+    channels.set(crewId, channel);
+  }
+  return channel;
+}
+
+/** Souscrit au canal Realtime d'un Crew. Renvoie une fonction de désinscription. */
 export function subscribeToCrew(
   crewId: string,
   me: CrewPresenceState,
   handlers: CrewRealtimeHandlers,
 ): () => void {
-  if (!isSupabaseConfigured) {
-    // Mode démo : pas de réseau. On no-op proprement.
-    return () => {};
-  }
+  if (!isLive) return () => {};
 
-  const channel: RealtimeChannel = supabase.channel(`crew:${crewId}`, {
-    config: { presence: { key: me.userId } },
-  });
+  const channel = getChannel(crewId);
+  lastPresence.set(crewId, me);
 
   channel
     .on('presence', { event: 'sync' }, () => {
@@ -53,32 +58,40 @@ export function subscribeToCrew(
         }));
       handlers.onPresenceSync(members);
     })
-    .on('broadcast', { event: 'wake_event' }, ({ payload }) => handlers.onWakeEvent(payload))
-    .on('broadcast', { event: 'wake_blast' }, ({ payload }) => handlers.onWakeBlast(payload))
+    .on('broadcast', { event: 'wake_event' }, ({ payload }) => handlers.onWakeEvent?.(payload))
     .subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await channel.track(me);
-      }
+      if (status === 'SUBSCRIBED') await channel.track(me);
     });
 
   return () => {
     supabase.removeChannel(channel);
+    channels.delete(crewId);
   };
 }
 
-/** Met à jour son propre statut de présence dans le crew. */
-export async function broadcastMyStatus(crewId: string, patch: Partial<CrewPresenceState>) {
-  if (!isSupabaseConfigured) return;
-  const channel = supabase.channel(`crew:${crewId}`);
-  await channel.track(patch);
+/** Met à jour son statut de présence dans le crew (depuis le flow d'alarme). */
+export async function setCrewStatus(crewId: string, patch: Partial<CrewPresenceState>): Promise<void> {
+  if (!isLive) return;
+  const channel = getChannel(crewId);
+  const merged = { ...(lastPresence.get(crewId) ?? {}), ...patch } as CrewPresenceState;
+  lastPresence.set(crewId, merged);
+  try {
+    await channel.track(merged);
+  } catch {
+    /* canal pas encore prêt — ignoré */
+  }
 }
 
-/** Émet un événement dans le feed live du crew. */
+/** Émet un événement dans le feed live + persiste dans wake_events. */
 export async function emitWakeEvent(
   crewId: string,
   event: { userId: string; type: string; payload?: Record<string, unknown> },
-) {
-  if (!isSupabaseConfigured) return;
-  const channel = supabase.channel(`crew:${crewId}`);
+): Promise<void> {
+  if (!isLive) return;
+  const channel = getChannel(crewId);
   await channel.send({ type: 'broadcast', event: 'wake_event', payload: event });
+  await supabase
+    .from('wake_events')
+    .insert({ crew_id: crewId, user_id: event.userId, type: event.type, payload: event.payload ?? {} })
+    .then(undefined, () => {});
 }

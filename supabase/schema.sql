@@ -39,6 +39,7 @@ create table profiles (
   current_streak int default 0,
   best_streak    int default 0,
   league_tier   league_tier default 'bronze',
+  onboarding_completed boolean default false,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()
 );
@@ -61,6 +62,7 @@ create table alarms (
   wake_blast_delay_min int default 5,            -- délai avant éligibilité Wake Blast
   grace_period_min   int default 2,              -- fenêtre "à l'heure"
   is_active          boolean default true,
+  notification_ids   text[] default '{}',        -- ids notifs locales planifiées
   created_at         timestamptz default now(),
   updated_at         timestamptz default now()
 );

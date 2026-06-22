@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TabParamList } from './types';
-import { LiquidGlassTabBar } from '@/components/navigation/LiquidGlassTabBar';
+import { AppleGlassSwitcher } from '@/components/navigation/AppleGlassSwitcher';
 import { HomeScreen } from '@/screens/alarm/HomeScreen';
 import { MissionsScreen } from '@/screens/missions/MissionsScreen';
 import { CrewScreen } from '@/screens/crew/CrewScreen';
@@ -14,7 +14,7 @@ export function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <LiquidGlassTabBar {...props} />}
+      tabBar={(props) => <AppleGlassSwitcher {...props} />}
     >
       <Tab.Screen name="Alarm" component={HomeScreen} />
       <Tab.Screen name="Missions" component={MissionsScreen} />

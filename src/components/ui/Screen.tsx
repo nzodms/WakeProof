@@ -25,7 +25,7 @@ export function Screen({
   tabBarSpacing = false,
 }: ScreenProps) {
   const t = useTheme();
-  const bottomPad = tabBarSpacing ? 120 : t.spacing.xl;
+  const bottomPad = tabBarSpacing ? 110 : t.spacing.xl;
 
   const body = (
     <View style={[styles.content, { paddingHorizontal: t.spacing.lg }, contentStyle]}>{children}</View>

@@ -13,6 +13,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
 import { useAlarmStore } from '@/store/useAlarmStore';
+import { saveAlarm as persistAlarm } from '@/features/alarms/alarmManager';
 import { MissionEngine } from '@/features/missions/MissionEngine';
 import { WEEKDAY_SHORT } from '@/lib/format';
 import { RootStackParamList } from '@/navigation/types';
@@ -22,7 +23,8 @@ export function CreateAlarmScreen() {
   const t = useTheme();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CreateAlarm'>>();
-  const { alarms, addAlarm, updateAlarm, getAlarm } = useAlarmStore();
+  const getAlarm = useAlarmStore((s) => s.getAlarm);
+  const [saving, setSaving] = useState(false);
 
   const existing = route.params?.alarmId ? getAlarm(route.params.alarmId) : undefined;
 
@@ -41,8 +43,10 @@ export function CreateAlarmScreen() {
     setWeekdays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
   };
 
-  const save = () => {
+  const save = async () => {
+    if (saving) return;
     haptics.success();
+    setSaving(true);
     const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     const base: Alarm = {
       id: existing?.id ?? `a${Date.now()}`,
@@ -51,19 +55,25 @@ export function CreateAlarmScreen() {
       weekdays,
       difficulty,
       soundId: existing?.soundId ?? 'default',
-      snoozeAllowed: snooze,
-      maxSnoozes: snooze ? (difficulty === 'easy' ? 3 : 1) : 0,
+      snoozeAllowed: difficulty === 'hardcore' ? false : snooze,
+      maxSnoozes: snooze && difficulty !== 'hardcore' ? (difficulty === 'easy' ? 3 : 1) : 0,
       missionType,
-      missionConfig: existing?.missionConfig ?? MissionEngine.get(missionType).defaultConfig as Record<string, unknown>,
+      missionConfig:
+        existing?.missionType === missionType
+          ? existing.missionConfig
+          : (MissionEngine.get(missionType).defaultConfig as Record<string, unknown>),
       crewId: existing?.crewId ?? null,
       wakeBlastEnabled: wakeBlast,
       wakeBlastDelayMin: blastDelay,
       gracePeriodMin: existing?.gracePeriodMin ?? (difficulty === 'hardcore' ? 0 : 2),
       isActive: true,
     };
-    if (existing) updateAlarm(existing.id, base);
-    else addAlarm(base);
-    nav.goBack();
+    try {
+      await persistAlarm(base);
+      nav.goBack();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const mission = MissionEngine.get(missionType);
@@ -207,7 +217,7 @@ export function CreateAlarmScreen() {
       </GlassCard>
 
       <View style={{ marginTop: t.spacing.xl }}>
-        <Button label={existing ? 'Enregistrer' : 'Créer le réveil'} onPress={save} />
+        <Button label={existing ? 'Enregistrer' : 'Créer le réveil'} onPress={save} loading={saving} />
       </View>
     </Screen>
   );

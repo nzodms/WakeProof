@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +12,8 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
 import { useCrewStore } from '@/store/useCrewStore';
+import { getCurrentUser } from '@/store/useSessionStore';
+import { subscribeToCrew } from '@/features/crew/crewRealtime';
 import { WAKE_STATUS_META } from '@/constants/wakeStatus';
 import { canSendWakeBlast } from '@/features/wakeBlast/wakeBlast';
 import { nowMinutesOfDay } from '@/lib/format';
@@ -21,8 +23,20 @@ import { CrewMemberStatus } from '@/types/domain';
 export function CrewScreen() {
   const t = useTheme();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { crews, activeCrewId, members, feed } = useCrewStore();
+  const { crews, activeCrewId, members, feed, setMembers } = useCrewStore();
   const crew = crews.find((c) => c.id === activeCrewId) ?? crews[0];
+
+  // Realtime V1 : on reçoit les statuts du matin du Crew en direct (live mode).
+  useEffect(() => {
+    if (!crew) return;
+    const { userId, username, avatarUrl } = getCurrentUser();
+    const unsub = subscribeToCrew(
+      crew.id,
+      { userId: userId ?? 'me', username, avatarUrl, status: 'sleeping' },
+      { onPresenceSync: (next) => next.length > 0 && setMembers(next) },
+    );
+    return unsub;
+  }, [crew, setMembers]);
 
   return (
     <Screen scroll tabBarSpacing>
